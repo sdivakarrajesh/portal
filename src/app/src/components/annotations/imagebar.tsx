@@ -10,8 +10,7 @@ import {
 import { AssetAPIObject } from "@portal/api/annotation";
 import VideoThumbnail from "react-video-thumbnail";
 import classes from "./imagebar.module.css";
-import { Grid, CellMeasurerCache, CellMeasurer } from 'react-virtualized';
-import AutoSizer from "react-virtualized-auto-sizer";
+import { Grid, CellMeasurerCache, CellMeasurer, AutoSizer } from 'react-virtualized';
 
 
 function ThumbnailGenerator(
@@ -129,7 +128,6 @@ export default class ImageBar extends Component<ImageBarProps> {
             
             cellRenderer={({ key, columnIndex, rowIndex, style, parent }) => {
               let item = this.props.assetList[columnIndex]
-              console.log(style)
               return <CellMeasurer
                 cache={this._cache}
                 columnIndex={columnIndex}

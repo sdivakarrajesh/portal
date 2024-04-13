@@ -10,18 +10,22 @@ import {
 import { AssetAPIObject } from "@portal/api/annotation";
 import VideoThumbnail from "react-video-thumbnail";
 import classes from "./imagebar.module.css";
+import { Grid, CellMeasurerCache, CellMeasurer } from 'react-virtualized';
+import AutoSizer from "react-virtualized-auto-sizer";
+
 
 function ThumbnailGenerator(
   asset: AssetAPIObject,
   index: string,
   useDarkTheme: boolean,
   clickCallback: (assetObject: AssetAPIObject) => void,
-  currentAssetID: string
+  currentAssetID: string,
+  key: any,
 ): JSX.Element {
   return (
     <Card
       className={["image-bar-thumbnail-card", classes.Card].join(" ")}
-      key={index}
+      key={key}
       onClick={() => clickCallback(asset)}
     >
       <div
@@ -92,11 +96,16 @@ interface ImageBarProps {
 
 export default class ImageBar extends Component<ImageBarProps> {
   private currentAssetID: string;
+  private _cache: CellMeasurerCache
 
   constructor(props: ImageBarProps) {
     super(props);
     this.currentAssetID = "";
     this.highlightAsset = this.highlightAsset.bind(this);
+    this._cache = new CellMeasurerCache({
+      defaultWidth: 100,
+      fixedHeight: true,
+    });
   }
 
   highlightAsset(assetUrl: string): void {
@@ -105,18 +114,44 @@ export default class ImageBar extends Component<ImageBarProps> {
   }
 
   render(): JSX.Element {
-    return (
-      <>
-        {this.props.assetList.map(object => {
-          return ThumbnailGenerator(
-            object,
-            object.assetUrl,
-            this.props.useDarkTheme,
-            this.props.callbacks.selectAssetCallback,
-            this.currentAssetID
-          );
-        })}
-      </>
-    );
+    return <AutoSizer>
+      {({ width, height }) => {
+        return (
+          <Grid
+            height={height}
+            width={width}
+            columnWidth={this._cache.columnWidth}
+            columnCount={this.props.assetList.length}
+            rowCount={1}
+            rowHeight={120}
+            overscanColumnCount={10}
+            style={{overflowY: "hidden"}}
+            
+            cellRenderer={({ key, columnIndex, rowIndex, style, parent }) => {
+              let item = this.props.assetList[columnIndex]
+              console.log(style)
+              return <CellMeasurer
+                cache={this._cache}
+                columnIndex={columnIndex}
+                rowIndex={rowIndex}
+                key={key}
+                parent={parent}
+              >
+                <div style={{margin: 10, ...style}}>
+                  {ThumbnailGenerator(
+                    item,
+                    item.assetUrl,
+                    this.props.useDarkTheme,
+                    this.props.callbacks.selectAssetCallback,
+                    this.currentAssetID,
+                    key,
+                  )}
+                </div>
+              </CellMeasurer>
+            }}
+          />
+        )
+      }}
+    </AutoSizer>
   }
 }
